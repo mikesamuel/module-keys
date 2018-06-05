@@ -256,6 +256,7 @@ module.exports = freeze(defineProperties(
 
 // Try to establish a trusted path.
 // Pin module in module cache.
+delete require.cache[module.id];
 defineProperty(
   require.cache,
   module.id,
@@ -264,6 +265,7 @@ defineProperty(
 for (const [ propertyName, descriptor ]
   of Object.entries(Object.getOwnPropertyDescriptors(module))) {
   if (descriptor.configurable) {
+    delete module[propertyName];
     descriptor.writable = propertyName === 'loaded';
     descriptor.configurable = false;
     defineProperty(module, propertyName, descriptor);
