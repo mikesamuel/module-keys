@@ -22,23 +22,26 @@
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
 require('../cjs').polyfill(module, require);
-const { isPublicKey } = require('../index.js');
+const { isPublicKey, publicKeySymbol } = require('../index.js');
 
 describe('cjs', () => {
   describe('exports', () => {
     it('simple polyfill', () => {
       const polyfilled = require('./data/cjs/simple.js');
       expect(isPublicKey(polyfilled.publicKey)).to.equal(true);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
       expect(polyfilled.exp).to.equal(42);
     });
     it('replaces exports', () => {
       const polyfilled = require('./data/cjs/replaces.js');
       expect(isPublicKey(polyfilled.publicKey)).to.equal(true);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
       expect(polyfilled.exp).to.equal(42);
     });
     it('exports another module', () => {
       const polyfilled = require('./data/cjs/reexporter.js');
       expect(isPublicKey(polyfilled.publicKey)).to.equal(true);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
       expect(polyfilled.publicKey).to.equal(require('./data/cjs/simple.js').publicKey);
       expect(polyfilled.exp).to.equal(42);
     });
@@ -51,12 +54,15 @@ describe('cjs', () => {
       // should not throw
       const polyfilled = require('./data/cjs/freezes-exports-late.js');
       expect(isPublicKey(polyfilled.publicKey)).to.equal(true);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
       expect(polyfilled.exp).to.equal(42);
     });
     it('legacy publicKey export', () => {
       const polyfilled = require('./data/cjs/legacy-publickey-export.js');
       expect(polyfilled.publicKey).to.equal('foo');
+      expect(polyfilled[Symbol.for('publicKey')]).to.equal('foo');
       expect(isPublicKey(polyfilled.publicKey)).to.equal(false);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
       expect(polyfilled.exp).to.equal(42);
     });
     it('exports primitive', () => {
@@ -67,6 +73,7 @@ describe('cjs', () => {
       const polyfilled = require('./data/cjs/loaded-while-loading.js');
       expect(polyfilled.loadedWhileLoading).to.equal(false);
       expect(isPublicKey(polyfilled.publicKey)).to.equal(true);
+      expect(isPublicKey(polyfilled[publicKeySymbol])).to.equal(true);
     });
   });
   describe('require.moduleKeys', () => {

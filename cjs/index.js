@@ -17,11 +17,18 @@
 
 'use strict';
 
-const { makeModuleKeys } = require('../index.js');
+const { makeModuleKeys, publicKeySymbol } = require('../index.js');
 
 /**
  * @fileoverview
  * Support for the CommonJS module keys polyfill.
+ * <ol>
+ *   <li>allocates a module keys instance for the module</li>
+ *   <li>attaches the public key to {@code module.exports}</li>
+ *   <li>makes the module keys available via {@code require.keys}</li>
+ *   <li>hooks into the module so that common patterns of replacing
+ *      {@code module.exports} will still export {@code publicKey}.</li>
+ * </ol>
  */
 
 function polyfill(module, require) {
@@ -30,6 +37,7 @@ function polyfill(module, require) {
   const { publicKey } = keysObj;
   // Export the public key.
   module.exports.publicKey = publicKey;
+  module.exports[publicKeySymbol] = publicKey;
   // If the module body overrides exports, try to
   // sneak it in there too.
   let { exports, loaded } = module;
@@ -47,12 +55,20 @@ function polyfill(module, require) {
           exports = newExports;
           if (newExports &&
               (typeof newExports === 'object' ||
-               typeof newExports === 'function') &&
-              !Object.hasOwnProperty.call(exports, 'publicKey')) {
-            try {
-              module.exports.publicKey = publicKey;
-            } catch (exc) {
-              // Oh well.  We tried our best.
+               typeof newExports === 'function')) {
+            if (!Object.hasOwnProperty.call(exports, 'publicKey')) {
+              try {
+                module.exports.publicKey = publicKey;
+              } catch (exc) {
+                // Oh well.  We tried our best.
+              }
+            }
+            if (!Object.hasOwnProperty.call(exports, publicKeySymbol)) {
+              try {
+                module.exports[publicKeySymbol] = publicKey;
+              } catch (exc) {
+                // Oh well.  We tried our best.
+              }
             }
           }
         },

@@ -112,6 +112,11 @@ const publicKeys = selfContained(new WeakSet());
  */
 const isPublicKey = publicKeys.has.bind(publicKeys);
 
+/**
+ * Symbol used to attach public keys to CommonJS exports.
+ */
+const publicKeySymbol = Symbol('publicKey');
+
 /** An opaque token used to represent a boxed value in transit. */
 class Box {
   toString() { // eslint-disable-line class-methods-use-this
@@ -243,7 +248,9 @@ function makeModuleKeys(moduleIdentifier) {
       isPublicKey: { value: isPublicKey, enumerable: true },
 
       // Modules may allow access to this, perhaps via module object.
+      // See cjs/index.js.
       publicKey: { value: publicKey, enumerable: true },
+      [publicKeySymbol]: { value: publicKey, enumerable: true },
     });
 }
 
@@ -253,6 +260,7 @@ module.exports = freeze(defineProperties(
     Box: { value: Box, enumerable: true },
     makeModuleKeys: { value: makeModuleKeys, enumerable: true },
     isPublicKey: { value: isPublicKey, enumerable: true },
+    publicKeySymbol: { value: publicKeySymbol, enumerable: true },
   }));
 
 // Try to establish a trusted path.
