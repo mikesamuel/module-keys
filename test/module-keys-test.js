@@ -22,6 +22,7 @@
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
 const index = require('../index.js');
+const { makeModuleKeys, isPublicKey } = index;
 
 describe('trusted path', () => {
   const id = require.resolve('../index.js');
@@ -33,7 +34,6 @@ describe('trusted path', () => {
       },
     },
   };
-  const { makeModuleKeys, isPublicKey } = index;
   it('require cache replacement', () => {
     expect(require.cache[id].exports).to.equal(index);
     expect(() => (require.cache[id] = imposter)).to.throw();
@@ -82,4 +82,55 @@ describe('privacy', () => {
 
     expect(seen.has(alice.privateKey)).to.equal(false);
   });
+});
+
+describe('mitm', () => {
+  function create2AndShare() {
+    const alice = makeModuleKeys('alice');
+    const bob = makeModuleKeys('bob');
+    const box = alice.box(
+      {}, (key) => key === bob.publicKey && isPublicKey(key) && key());
+    bob.unbox(
+      box, (key) => key === alice.publicKey && isPublicKey(key) && key());
+  }
+
+  const targets = [
+    [ Object, 'create' ],
+    [ Object, 'assign' ],
+    [ Object, 'defineProperty' ],
+    [ Object, 'defineProperties' ],
+    [ Object, 'freeze' ],
+    [ Object, 'getOwnPropertyDescriptors' ],
+    [ Object.prototype, 'hasOwnProperty' ],
+    [ Object.prototype, 'toString' ],
+    [ Object.prototype, 'valueOf' ],
+    [ Function, 'apply' ],
+    [ Function, 'bind' ],
+    [ Function, 'call' ],
+    [ WeakMap, 'has' ],
+    [ WeakMap, 'get' ],
+    [ WeakMap, 'set' ],
+    [ WeakSet, 'add' ],
+    [ WeakSet, 'has' ],
+    [ global, 'Boolean' ],
+    [ global, 'Number' ],
+    [ global, 'Object' ],
+    [ global, 'String' ],
+  ];
+  for (const [ obj, name ] of targets) {
+    it(`${obj.name || '?'}.${name}`, () => {
+      let successful = false;
+      const original = obj[name];
+      obj[name] = (...args) => {
+        successful = true;
+        return original(...args);
+      };
+      try {
+        create2AndShare();
+      } finally {
+        obj[name] = original;
+      }
+      expect(successful).to.equal(false);
+    });
+  }
 });
