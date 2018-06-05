@@ -18,6 +18,7 @@
 'use strict';
 
 /**
+ * @fileoverview
  * Allow modules to establish secure channels to other modules.
  * This is a general purpose building block that aims to enable:
  * - product teams to grant more privilege to dependencies they
