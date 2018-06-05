@@ -70,17 +70,17 @@ describe('cjs', () => {
     });
   });
   describe('require.moduleKeys', () => {
-    const { moduleKeys } = require;
+    const { keys } = require;
     it('publicKey', () => {
-      expect(isPublicKey(moduleKeys.publicKey)).to.equal(true);
+      expect(isPublicKey(keys.publicKey)).to.equal(true);
     });
     it('keys', () => {
-      expect(moduleKeys.publicKey()).to.equal(false);
-      expect(moduleKeys.privateKey(() => moduleKeys.publicKey())).to.equal(true);
-      expect(moduleKeys.publicKey()).to.equal(false);
+      expect(keys.publicKey()).to.equal(false);
+      expect(keys.privateKey(() => keys.publicKey())).to.equal(true);
+      expect(keys.publicKey()).to.equal(false);
     });
     it('exports', () => {
-      expect(moduleKeys.publicKey).to.equal(module.exports.publicKey);
+      expect(keys.publicKey).to.equal(module.exports.publicKey);
     });
     it('id', () => {
       expect(module.exports.publicKey.moduleIdentifier).to.equal(__filename);

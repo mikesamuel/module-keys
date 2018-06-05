@@ -26,7 +26,7 @@ const { makeModuleKeys } = require('../index.js');
 
 function polyfill(module, require) {
   const keysObj = makeModuleKeys(module.filename);
-  require.moduleKeys = keysObj;
+  require.keys = keysObj;
   const { publicKey } = keysObj;
   // Export the public key.
   module.exports.publicKey = publicKey;
