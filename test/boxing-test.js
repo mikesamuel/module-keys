@@ -21,7 +21,7 @@
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-const { makeModuleKeys, isPublicKey } = require('../index.js');
+const { Box, makeModuleKeys, isPublicKey } = require('../index.js');
 
 describe('boxing', () => {
   const alice = makeModuleKeys('alice');
@@ -91,10 +91,43 @@ describe('boxing', () => {
     expect(carol.unbox(box, () => true, obj)).to.not.equal({});
     const dot = /./;
     expect(bob.unbox(box, isKey(carol), dot)).to.equal(dot);
+    expect(bob.unbox(null, isKey(carol), dot)).to.equal(dot);
+    expect(bob.unbox('[Box]', isKey(carol), dot)).to.equal(dot);
   });
   it('unboxStrict', () => {
-    const box = alice.box(new Date(), isKey(bob));
+    const date = new Date();
+    const box = alice.box(date, isKey(bob));
     expect(() => carol.unboxStrict(box, () => true)).to.throw();
     expect(() => bob.unboxStrict(box, isKey(carol))).to.throw();
+    expect(bob.unboxStrict(box, isKey(alice))).to.equal(date);
+  });
+  it('missingMayOpen', () => {
+    expect(() => alice.box('foo')).to.throw();
+  });
+  function justThrow() {
+    throw new Error();
+  }
+  it('missingIfFrom', () => {
+    const box = alice.box('foo', justThrow);
+    expect(() => bob.unbox(box)).to.throw();
+  });
+  it('throwingMayOpen', () => {
+    const box = alice.box('foo', justThrow);
+    expect(() => bob.unbox(box, () => true)).to.throw();
+  });
+  it('throwingIfFrom', () => {
+    const box = alice.box('foo', justThrow);
+    expect(() => bob.unbox(box, () => true)).to.throw();
+  });
+});
+
+describe('Box', () => {
+  const alice = makeModuleKeys('alice');
+  const box = alice.box('foo', () => true);
+  it('toString', () => {
+    expect(box.toString()).to.equal('[Box]');
+  });
+  it('instanceof', () => {
+    expect(box instanceof Box).to.equal(true);
   });
 });
