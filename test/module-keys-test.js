@@ -85,7 +85,7 @@ describe('privacy', () => {
 });
 
 describe('mitm', () => {
-  function create2AndShare() {
+  function createAndShare() {
     const alice = makeModuleKeys('alice');
     const bob = makeModuleKeys('bob');
     const box = alice.box(
@@ -94,6 +94,7 @@ describe('mitm', () => {
       box, (key) => key === alice.publicKey && isPublicKey(key) && key());
   }
 
+  /* eslint-disable array-element-newline */
   const targets = [
     [ Object, 'create' ],
     [ Object, 'assign' ],
@@ -117,8 +118,9 @@ describe('mitm', () => {
     [ global, 'Object' ],
     [ global, 'String' ],
   ];
+  /* eslint-enable array-element-newline */
   for (const [ obj, name ] of targets) {
-    it(`${obj.name || '?'}.${name}`, () => {
+    it(`${ obj.name || '?' }.${ name }`, () => {
       let successful = false;
       const original = obj[name];
       obj[name] = (...args) => {
@@ -126,7 +128,7 @@ describe('mitm', () => {
         return original(...args);
       };
       try {
-        create2AndShare();
+        createAndShare();
       } finally {
         obj[name] = original;
       }
