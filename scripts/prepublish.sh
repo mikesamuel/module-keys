@@ -12,7 +12,7 @@ rm -rf "$TMP_WORKSPACE"
 mkdir -p "$TMP_WORKSPACE"/package
 
 # Repack, and check the contents
-export TARBALL="$(npm pack)"
+export TARBALL="$(npm pack 2>/dev/null | tail -1)"
 
 echo PACKAGE CONTENTS:
 tar tfz "$TARBALL"
@@ -25,6 +25,7 @@ echo "$PACKED_OK" | egrep -qi '^y'
 # Test that it installs and tests run in isolation
 cp "$TARBALL" "$TMP_WORKSPACE"/
 cp -r test/ "$TMP_WORKSPACE"/package/test/
+cp .eslintignore "$TMP_WORKSPACE"/package/
 pushd "$TMP_WORKSPACE"
   tar xfz "$TARBALL" && (
     pushd "$TMP_WORKSPACE"/package
