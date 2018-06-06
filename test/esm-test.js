@@ -23,10 +23,27 @@ const { describe, it } = require('mocha');
 
 describe('index.mjs', () => {
   const test = it('loads', (done) => {
-    childProcess.execFile(
-      process.execPath,
-      [ '--experimental-modules', path.join(__dirname, '..', 'index.mjs') ],
-      done);
+    const proc = childProcess.spawn(
+      process.execPath, [ '--experimental-modules' ],
+      { stdio: 'ignore' });
+    proc.on('exit', (code, signal) => {
+      if (code) {
+        // node --experimental-modules not supported until node@8
+        // eslint-disable-next-line no-console
+        console.log('Skipping --experimental-modules support tests');
+        done();
+        return;
+      }
+      if (signal) {
+        done(new Error(
+          `${ process.execPath } terminated with signal ${ signal }`));
+        return;
+      }
+      childProcess.execFile(
+        process.execPath,
+        [ '--experimental-modules', path.join(__dirname, '..', 'index.mjs') ],
+        done);
+    });
   });
   test.slow(300); // eslint-disable-line no-magic-numbers
   test.timeout(1000); // eslint-disable-line no-magic-numbers
