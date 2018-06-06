@@ -231,3 +231,7 @@ to any `"publicKey"` property.
 const { publicKeySymbol } = require('module-keys');  // CommonJS
 import { publicKeySymbol } from 'module-keys';       // ES6 modules
 ```
+
+---
+
+This is not an official Google product.
