@@ -254,30 +254,10 @@ function makeModuleKeys(moduleIdentifier) {
     });
 }
 
-// CommonJS specific
-module.exports = freeze(defineProperties(
-  create(null),
-  {
-    Box: { value: Box, enumerable: true },
-    makeModuleKeys: { value: makeModuleKeys, enumerable: true },
-    isPublicKey: { value: isPublicKey, enumerable: true },
-    publicKeySymbol: { value: publicKeySymbol, enumerable: true },
-  }));
-
-// Try to establish a trusted path.
-// Pin module in module cache.
-delete require.cache[module.id];
-defineProperty(
-  require.cache,
-  module.id,
-  { value: module, enumerable: true });
-// Prevent private key gathering via replacement.
-for (const [ propertyName, descriptor ]
-  of Object.entries(Object.getOwnPropertyDescriptors(module))) {
-  if (descriptor.configurable) {
-    delete module[propertyName];
-    descriptor.writable = propertyName === 'loaded';
-    descriptor.configurable = false;
-    defineProperty(module, propertyName, descriptor);
-  }
-}
+// EcmaScript modules specific
+export {
+  Box,
+  makeModuleKeys,
+  isPublicKey,
+  publicKeySymbol
+};

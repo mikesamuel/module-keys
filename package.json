@@ -12,6 +12,7 @@
   "main": "index.js",
   "files": [
     "index.js",
+    "index.mjs",
     "babel/index.js",
     "cjs/index.js"
   ],
