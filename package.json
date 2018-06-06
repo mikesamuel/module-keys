@@ -44,7 +44,7 @@
     "eslint": "^4.15.0",
     "eslint-config-strict": "*",
     "istanbul": "^0.4.5",
-    "mocha": "^4.0.1",
+    "mocha": "^5.2.0",
     "mocha-lcov-reporter": "^1.3.0",
     "pre-commit": "^1.2.2"
   },
