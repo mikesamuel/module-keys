@@ -34,14 +34,20 @@ dependencies' dependencies with unmitigated access to powerful APIs
 like `child_process` since subtle bugs can have disastrous consequences
 when exposed to attacker-controlled inputs.
 
-Module keys enable secure code patterns like those in the examples below.
-They can combine with module loader hooks and other mechanisms to bound
-the security consequences of common bugs and the amount of code
-that might be involved in certain kinds of security failures helping
-security reviewers to focus their attention.
+Module keys enable secure code patterns like those in the examples
+below.  They can combine with module loader hooks and other mechanisms
+to bound the security consequences of common bugs and the amount of
+code that might be involved in certain kinds of security failures
+helping security reviewers to focus their attention.
 
 See also [*node-sec-patterns*](https://www.npmjs.com/package/node-sec-patterns)
 which makes these patterns easy to express.
+
+Module keys allow code written in good faith to cooperate while
+avoiding lowest-common-denominator security problems.  It does not
+allow safely running malicious code within the same process.
+Potentially malicious code should be sandboxed if it needs to run at
+all.
 
 
 ## Installing
@@ -100,7 +106,7 @@ Boxes are opaque values, and the contained value can only be accessed by passing
 them to a `.unbox` which is described below.
 
 ```js
-const { Box } = require('module-keys');      // CommonJS
+const { Box } = require('module-keys');       // CommonJS
 import { Box } from './path/to/module-keys';  // ES6
 ```
 
@@ -117,7 +123,7 @@ Returns an instance of `class Box`.
 ```js
 // CommonJS
 const { publicKey: fooKey } = require('./foo');
-const box = require.box(value, (k) => k === fooKey && k());
+const box = require.keys.box(value, (k) => k === fooKey && k());
 // box may only be opened via ./foo's unboxer.
 ```
 
@@ -146,7 +152,7 @@ true when passed the boxer's public key.  Otherwise returns *fallback*.
 // CommonJS
 const { publicKey: barKey } = require('./bar');
 function f(box) {
-  console.log(`I got ${ require.unbox(box, () => true, 'a box I cannot open') }`)
+  console.log(`I got ${ require.keys.unbox(box, () => true, 'a box I cannot open') }`)
 }
 ```
 
@@ -179,12 +185,16 @@ Any calls to `.publicKey()` during the call to `f()` will return true.
 
 *f* - a zero argument function
 
-**Warning**: Do not export your private keys as that will allow other code
-to masquerade as you.  If you need to export your private key to another module,
-put it in a box that is only openable by that module.
+Returns - the result of calling `f()`.
+
+**Warning**: Do not export your private keys as that may allow other
+code to impersonate you.  If you need to provide your private key to a
+module you trust, put it in a box that is only openable by that
+module.
 
 ### `publicKey`
-`.publicKey()` returns true if called in the context
+`.publicKey()` returns true if called in the context of its
+corresponding [private key](#privatekey) or false otherwise.
 
 The Babel plugin auto-exports public keys for all processed modules.
 
@@ -207,7 +217,7 @@ properties.
 
 ```js
 const { makeModuleKeys } = require('module-keys');  // CommonJS
-import { makeModuleKeys } from 'module-keys';  // ES6 modules
+import { makeModuleKeys } from 'module-keys';       // ES6 modules
 ```
 
 ### `publicKeySymbol`
@@ -219,5 +229,5 @@ to any `"publicKey"` property.
 
 ```js
 const { publicKeySymbol } = require('module-keys');  // CommonJS
-import { publicKeySymbol } from 'module-keys';  // ES6 modules
+import { publicKeySymbol } from 'module-keys';       // ES6 modules
 ```
