@@ -24,12 +24,74 @@
 
 const path = require('path');
 
+const ID_POLYFILL = 'polyfill';
+const ID_MODULE = 'module';
+const ID_REQUIRE = 'require';
+const STR_MODULE_KEYS_CJS = 'module-keys/cjs';
+
+function isIdentifierNamed(node, name) {
+  return node.type === 'Identifier' && node.name === name;
+}
+
+function isString(node, value) {
+  return node.type === 'StringLiteral' && node.value === value;
+}
+
+function isCall(node, fnPredicate, ...argPredicates) {
+  if (node.type !== 'CallExpression') {
+    return false;
+  }
+  const { callee, 'arguments': args } = node;
+  const nArgs = args.length;
+  if (nArgs === argPredicates.length &&
+      fnPredicate(callee)) {
+    for (let i = 0; i < nArgs; ++i) {
+      if (!argPredicates[i](args[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 module.exports = function moduleKeysBabelPlugin({ types: t }) {
   let isCommonJsModule = true;
-  // let sawPolyfill = false; // TODO: don't polyfill if already present
+  let sawCjsPolyfill = false;
+  let sawEsPolyfill = false;
   return {
     name: 'module-keys/babel plugin',
     visitor: {
+      CallExpression(nodePath) {
+        // If there's already a CJS polyfill, remember so we
+        // don't add a redundant polyfill.
+        // This helps us bootstrap the index file with a public key.
+        const { callee } = nodePath.node;
+        if (callee.type === 'MemberExpression' &&
+            isIdentifierNamed(callee.property, ID_POLYFILL) &&
+            // Expect top level.
+            nodePath.parentPath.node.type === 'ExpressionStatement' &&
+            nodePath.parentPath.parentPath.node.type === 'Program' &&
+            isCall(
+              nodePath.node,
+              ({ object }) => isCall( // eslint-disable-line id-blacklist
+                object, // eslint-disable-line id-blacklist
+                (fun) => isIdentifierNamed(fun, ID_REQUIRE),
+                (arg) => isString(arg, STR_MODULE_KEYS_CJS)),
+              (arg) => isIdentifierNamed(arg, ID_MODULE),
+              (arg) => isIdentifierNamed(arg, ID_REQUIRE))) {
+          sawCjsPolyfill = true;
+        }
+      },
+      VariableDeclarator(nodePath) {
+        // If there's already a top level moduleKeys variable, don't insert the
+        // ES6 polyfill.
+        if (isIdentifierNamed(nodePath.node.id, 'moduleKeys') &&
+            nodePath.parentPath.node.type === 'VariableDeclaration' &&
+            nodePath.parentPath.parentPath.node.type === 'Program') {
+          sawEsPolyfill = true;
+        }
+      },
       ModuleDeclaration() {
         isCommonJsModule = false;
       },
@@ -37,8 +99,13 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
         enter() {
           // until proven otherwise
           isCommonJsModule = true;
+          sawCjsPolyfill = false;
+          sawEsPolyfill = false;
         },
         exit(nodePath, state) {
+          if (isCommonJsModule ? sawCjsPolyfill : sawEsPolyfill) {
+            return;
+          }
           const polyfills = [];
           if (isCommonJsModule) {
             // require('module-keys/cjs').polyfill(module, require);
@@ -47,10 +114,10 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                 t.callExpression(
                   t.memberExpression(
                     t.callExpression(
-                      t.identifier('require'),
-                      [ t.stringLiteral('module-keys/cjs') ]),
-                    t.identifier('polyfill')),
-                  [ t.identifier('module'), t.identifier('require') ])));
+                      t.identifier(ID_REQUIRE),
+                      [ t.stringLiteral(STR_MODULE_KEYS_CJS) ]),
+                    t.identifier(ID_POLYFILL)),
+                  [ t.identifier(ID_MODULE), t.identifier(ID_REQUIRE) ])));
           } else {
             const { filename } = state.file.opts;
             // Compute the absolute path to the ESM index file.
