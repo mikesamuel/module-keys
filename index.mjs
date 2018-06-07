@@ -255,9 +255,14 @@ function makeModuleKeys(moduleIdentifier) {
 }
 
 // EcmaScript modules specific
+const myPublicKey = makeModuleKeys().publicKey;
+const moduleKeys = null;  // Prevent polyfilling this module.
 export {
   Box,
   makeModuleKeys,
   isPublicKey,
-  publicKeySymbol
+  publicKeySymbol,
+
+  // The public key for this module.  Exported for consistency.
+  myPublicKey as publicKey,
 };

@@ -255,6 +255,8 @@ function makeModuleKeys(moduleIdentifier) {
 }
 
 // CommonJS specific
+const { publicKey: myPublicKey } = makeModuleKeys();
+
 module.exports = freeze(defineProperties(
   create(null),
   {
@@ -262,6 +264,10 @@ module.exports = freeze(defineProperties(
     makeModuleKeys: { value: makeModuleKeys, enumerable: true },
     isPublicKey: { value: isPublicKey, enumerable: true },
     publicKeySymbol: { value: publicKeySymbol, enumerable: true },
+
+    // The public key for this module.  Exported for consistency.
+    publicKey: myPublicKey,
+    [publicKeySymbol]: myPublicKey,
   }));
 
 // Try to establish a trusted path.

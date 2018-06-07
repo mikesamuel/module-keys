@@ -96,11 +96,16 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
         isCommonJsModule = false;
       },
       Program: {
-        enter() {
+        enter(nodePath, state) {
           // until proven otherwise
           isCommonJsModule = true;
           sawCjsPolyfill = false;
           sawEsPolyfill = false;
+          if (path.join(__dirname, '..', 'index.js') === state.file.opts.filename) {
+            // Don't polyfill the index file.  It bootstraps itself
+            sawCjsPolyfill = true;
+            state.stop();
+          }
         },
         exit(nodePath, state) {
           if (isCommonJsModule ? sawCjsPolyfill : sawEsPolyfill) {
