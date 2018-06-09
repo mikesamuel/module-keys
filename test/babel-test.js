@@ -53,3 +53,52 @@ describe('polyfilling v bootstrap', () => {
     expectPluginNoop(path.join(__dirname, '../index.mjs'));
   });
 });
+
+describe('babel plugin options', () => {
+  it('cjs explicit root', () => {
+    const { code } = babel.transform(
+      'function f() {}',
+      {
+        filename: '/foo/bar/baz.js',
+        plugins: [
+          [
+            path.join(__dirname, '../babel/index.js'),
+            {
+              'rootDir': '/foo/boo',
+            },
+          ],
+        ],
+      });
+    expect(code).to.equal(
+      'require("module-keys/cjs").polyfill(module, require, "../bar/baz.js");\n\n' +
+      'function f() {}');
+  });
+  it('es6 explicit root', () => {
+    const { code } = babel.transform(
+      'export function f() {}',
+      {
+        filename: '/foo/bar/baz.js',
+        plugins: [
+          [
+            path.join(__dirname, '../babel/index.js'),
+            {
+              'rootDir': '/foo/boo',
+            },
+          ],
+        ],
+      });
+    expect(code).to.equal([
+      /* eslint-disable array-element-newline */
+      `import { makeModuleKeys as __moduleKeysMaker } from "../..${ path.join(__dirname, '..') }/index.mjs";`,
+      '',
+      'const moduleKeys = __moduleKeysMaker("../bar/baz.js"),',
+      '      {',
+      '  publicKey: __moduleKeysPublicKey',
+      '} = moduleKeys;',
+      '',
+      'export { __moduleKeysPublicKey as publicKey };',
+      'export function f() {}',
+      /* eslint-enable array-element-newline */
+    ].join('\n'));
+  });
+});

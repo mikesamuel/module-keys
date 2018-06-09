@@ -2,6 +2,6 @@
 // polyfilling the outer module.
 
 exports.x = (function (require, module) {
-  require("module-keys/cjs").polyfill(module, require);
+  require("module-keys/cjs").polyfill(module, require, '/a');
   return module.exports;
 }(require, { id: 'inner', exports: {} }));

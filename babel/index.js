@@ -29,7 +29,15 @@ const ID_MODULE = 'module';
 const ID_REQUIRE = 'require';
 const STR_MODULE_KEYS_CJS = 'module-keys/cjs';
 
-const moduleRoot = path.join(__dirname, '..');
+const defaultRootDir = (() => {
+  // dir containing babel
+  const root = path.join(__dirname, '..');
+  // dir containing module-keys
+  const rootParent = path.join(root, '..');
+  return path.basename(rootParent) === 'node_modules' ?
+    path.join(rootParent, '..') :
+    root;
+})();
 
 function isIdentifierNamed(node, name) {
   return node.type === 'Identifier' && node.name === name;
@@ -81,7 +89,8 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                 (fun) => isIdentifierNamed(fun, ID_REQUIRE),
                 (arg) => isString(arg, STR_MODULE_KEYS_CJS)),
               (arg) => isIdentifierNamed(arg, ID_MODULE),
-              (arg) => isIdentifierNamed(arg, ID_REQUIRE))) {
+              (arg) => isIdentifierNamed(arg, ID_REQUIRE),
+              (arg) => arg.type === 'StringLiteral')) {
           sawCjsPolyfill = true;
         }
       },
@@ -104,7 +113,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
           sawCjsPolyfill = false;
           sawEsPolyfill = false;
           const { filename } = state.file.opts;
-          if (moduleRoot === path.dirname(filename)) {
+          if (path.join(__dirname, '..') === path.dirname(filename)) {
             const basename = path.basename(filename);
             if (basename === 'index.js') {
               // Don't polyfill the index file.  It bootstraps itself
@@ -118,9 +127,13 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
           if (isCommonJsModule ? sawCjsPolyfill : sawEsPolyfill) {
             return;
           }
+          const { filename } = state.file.opts;
+          const { rootDir = defaultRootDir } = state.opts;
+          const importSpec = path.relative(rootDir, filename);
+
           const polyfills = [];
           if (isCommonJsModule) {
-            // require('module-keys/cjs').polyfill(module, require);
+            // require('module-keys/cjs').polyfill(module, require, 'path');
             polyfills.push(
               t.expressionStatement(
                 t.callExpression(
@@ -129,15 +142,14 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                       t.identifier(ID_REQUIRE),
                       [ t.stringLiteral(STR_MODULE_KEYS_CJS) ]),
                     t.identifier(ID_POLYFILL)),
-                  [ t.identifier(ID_MODULE), t.identifier(ID_REQUIRE) ])));
+                  [ t.identifier(ID_MODULE), t.identifier(ID_REQUIRE), t.stringLiteral(importSpec) ])));
           } else {
-            const { filename } = state.file.opts;
             // Compute the absolute path to the ESM index file.
             const moduleKeysPath = path.join(__dirname, '..', 'index.mjs');
             const moduleKeysImportSpec = path.relative(path.dirname(filename), moduleKeysPath);
 
             // import { makeModuleKeys as __moduleKeysMaker } from "./path/to/module-keys";
-            // const moduleKeys = __moduleKeysMaker(import.meta.url);
+            // const moduleKeys = __moduleKeysMaker('importSpec');
             // const { publicKey: __moduleKeysPublicKey } = moduleKeys;
             // export { __moduleKeysPublicKey as publicKey };
             polyfills.push(
@@ -155,12 +167,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                     t.identifier('moduleKeys'),
                     t.callExpression(
                       t.identifier('__moduleKeysMaker'),
-                      [
-                        t.memberExpression(
-                          // TODO: should this use t.metaProperty?
-                          t.memberExpression(t.identifier('import'), t.identifier('meta')),
-                          t.identifier('url')),
-                      ])),
+                      [ t.stringLiteral(importSpec) ])),
                   t.variableDeclarator(
                     t.objectPattern(
                       [

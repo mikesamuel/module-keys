@@ -55,17 +55,23 @@ all.
 ```sh
 $ npm install --save module-keys
 ```
+
 ## Babel Plugin
-The babel plugin will add keys to all your modules.
+The babel plugin will add keys to your modules.
 
 ### Via .babelrc (Recommended)
 Add the following line to your `.babelrc` file:
 
 ```json
 {
-  "plugins": ["module-keys/babel"]
+  "plugins": [
+    [ "module-keys/babel", { "rootDir": "/path/to/module/root" } ]
+  ]
 }
 ```
+
+The optional `"rootDir"` option lets you specify the base URL
+used to compute relative module identifiers.
 
 ### Via CLI
 ```sh
@@ -75,9 +81,12 @@ babel --plugins module-keys/babel script.js
 ### Via Node API
 ```js
 require("@babel/core").transform("code", {
-  plugins: ["module-keys/babel"]
+  plugins: [
+    [ "module-keys/babel", { "rootDir": "/path/to/module/root" } ]
+  ]
 });
 ```
+
 
 ### CommonJS Modules
 Once you've run the Babel plugin over your modules, each module will have
@@ -209,6 +218,9 @@ const { publicKey: fooPublicKey } = require('./foo');
 // ES6 modules
 import { publicKey as fooPublicKey } from './foo';
 ```
+
+Each `publicKey` also has a `moduleIdentifier` property which
+specifies the location of the module relative to the module root.
 
 ### `makeModuleKeys`
 `makeModuleKeys()` returns a new module keys bundle with its own

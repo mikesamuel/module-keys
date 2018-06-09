@@ -1,6 +1,6 @@
 import { makeModuleKeys as __moduleKeysMaker } from "../../../../index.mjs";
 
-const moduleKeys = __moduleKeysMaker(import.meta.url),
+const moduleKeys = __moduleKeysMaker("test/data/babel/ecmascript-module/code.js"),
       {
   publicKey: __moduleKeysPublicKey
 } = moduleKeys;
