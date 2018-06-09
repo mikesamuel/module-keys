@@ -23,6 +23,7 @@ const { expect } = require('chai');
 const { describe, it } = require('mocha');
 const index = require('../index.js');
 const { makeModuleKeys, isPublicKey } = index;
+const { polyfill } = require('../cjs/index.js');
 
 describe('trusted path', () => {
   const id = require.resolve('../index.js');
@@ -53,7 +54,7 @@ describe('trusted path', () => {
 });
 
 describe('privacy', () => {
-  const alice = index.makeModuleKeys('alice');
+  const alice = makeModuleKeys('alice');
   const box = alice.box('foo', () => true);
   it('private key leak', () => {
     // Walk all object reachable from public key and a box to make sure private key not among them.
@@ -86,12 +87,24 @@ describe('privacy', () => {
 
 describe('mitm', () => {
   function createAndShare() {
-    const alice = makeModuleKeys('alice');
+    function aliceRequire() {
+      throw new Error('polyfill should not call');
+    }
+    const aliceModule = {
+      filename: 'alice',
+      exports: {},
+      loaded: false,
+    };
+    polyfill(aliceModule, aliceRequire);
+
+    const alice = aliceRequire.keys;
     const bob = makeModuleKeys('bob');
     const box = alice.box(
       {}, (key) => key === bob.publicKey && isPublicKey(key) && key());
     bob.unbox(
       box, (key) => key === alice.publicKey && isPublicKey(key) && key());
+
+    aliceModule.loaded = true;
   }
 
   /* eslint-disable array-element-newline */
@@ -105,27 +118,43 @@ describe('mitm', () => {
     [ Object.prototype, 'hasOwnProperty' ],
     [ Object.prototype, 'toString' ],
     [ Object.prototype, 'valueOf' ],
-    [ Function, 'apply' ],
-    [ Function, 'bind' ],
-    [ Function, 'call' ],
-    [ WeakMap, 'has' ],
-    [ WeakMap, 'get' ],
-    [ WeakMap, 'set' ],
-    [ WeakSet, 'add' ],
-    [ WeakSet, 'has' ],
+    [ Function.prototype, 'apply' ],
+    [ Function.prototype, 'bind' ],
+    [ Function.prototype, 'call' ],
+    [ RegExp.prototype, 'exec' ],
+    [ String.prototype, 'charAt' ],
+    [ String.prototype, 'charCodeAt' ],
+    [ String.prototype, 'codePointAt' ],
+    [ String.prototype, 'indexOf' ],
+    [ String.prototype, 'match' ],
+    [ String.prototype, 'replace' ],
+    [ String.prototype, 'substr' ],
+    [ String.prototype, 'substring' ],
+    [ String.prototype, 'valueOf' ],
+    [ String.prototype, 'toString' ],
+    [ String, 'fromCharCode' ],
+    [ WeakMap.prototype, 'has' ],
+    [ WeakMap.prototype, 'get' ],
+    [ WeakMap.prototype, 'set' ],
+    [ WeakSet.prototype, 'add' ],
+    [ WeakSet.prototype, 'has' ],
     [ global, 'Boolean' ],
     [ global, 'Number' ],
     [ global, 'Object' ],
     [ global, 'String' ],
   ];
+  const { apply } = Reflect;
   /* eslint-enable array-element-newline */
   for (const [ obj, name ] of targets) {
-    it(`${ obj.name || '?' }.${ name }`, () => {
+    const objName =
+          obj.name || (hasOwnProperty.call(obj, 'constructor') && obj.constructor.name) || '?';
+    const desc = `${ objName }.${ name }`;
+    it(desc, () => {
       let successful = false;
       const original = obj[name];
-      obj[name] = (...args) => {
+      obj[name] = function monkeypatch(...args) {
         successful = true;
-        return original(...args);
+        return apply(original, this, args);
       };
       try {
         createAndShare();

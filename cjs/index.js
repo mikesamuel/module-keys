@@ -17,8 +17,6 @@
 
 'use strict';
 
-const { makeModuleKeys, publicKeySymbol } = require('../index.js');
-
 /**
  * @fileoverview
  * Support for the CommonJS module keys polyfill.
@@ -31,8 +29,50 @@ const { makeModuleKeys, publicKeySymbol } = require('../index.js');
  * </ol>
  */
 
+const { makeModuleKeys, publicKeySymbol } = require('../index.js');
+const { apply } = Reflect;
+const { defineProperties, hasOwnProperty } = Object;
+const { indexOf, substring } = String.prototype;
+const { replace } = RegExp.prototype;
+const { sep } = require('path');
+const { dirname, relpath } = require('../lib/relpath.js');
+
+const allSeps = new RegExp(`\\${ sep }`, 'g');
+
+// Compute a root so the module identifier strings are not
+// sensitive to ancestors of the local client.
+const root = (() => {
+  const nodeModulesPathElement = `${ sep }node_modules${ sep }`;
+  // Use the first node_modules since nested node_modules are
+  // subdirectories of installed packages that pack overly eagerly.
+  const nodeModulesIndex = apply(
+    indexOf, __dirname, [ nodeModulesPathElement ]);
+  if (nodeModulesIndex >= 0) {
+    return apply(substring, __dirname, [ 0, nodeModulesIndex ]);
+  }
+  return dirname(dirname(__dirname));
+})();
+
+/**
+ * Makes module keys available to module code as {@code require.keys}
+ * and makes a best effort to export the modules public key via
+ * an exported property named "publicKey" and via the public key symbol.
+ *
+ * @param {!Module} module the CommonJS module to polyfill.
+ * @param {!function(string):*} require module's require function.
+ */
 function polyfill(module, require) {
-  const keysObj = makeModuleKeys(module.filename);
+  const { filename } = module;
+  let canonIdentifier = relpath(root, filename);
+  if (sep !== '/') {
+    // Make the identifier look more like a relative URL.
+    // TODO: Can Windows paths like `C:\foo/../bar spoof?
+    // I don't think we care since bad identifiers should only
+    // deny service locally.
+    canonIdentifier = apply(replace, allSeps, [ '/' ]);
+  }
+
+  const keysObj = makeModuleKeys(canonIdentifier);
   require.keys = keysObj;
   const { publicKey } = keysObj;
   // Export the public key.
@@ -43,7 +83,7 @@ function polyfill(module, require) {
   let { exports, loaded } = module;
   delete module.exports;
   delete module.loaded;
-  Object.defineProperties(
+  defineProperties(
     module, {
       exports: {
         enumerable: true,
@@ -56,14 +96,14 @@ function polyfill(module, require) {
           if (newExports &&
               (typeof newExports === 'object' ||
                typeof newExports === 'function')) {
-            if (!Object.hasOwnProperty.call(exports, 'publicKey')) {
+            if (!apply(hasOwnProperty, exports, [ 'publicKey' ])) {
               try {
                 module.exports.publicKey = publicKey;
               } catch (exc) {
                 // Oh well.  We tried our best.
               }
             }
-            if (!Object.hasOwnProperty.call(exports, publicKeySymbol)) {
+            if (!apply(hasOwnProperty, exports, [ publicKeySymbol ])) {
               try {
                 module.exports[publicKeySymbol] = publicKey;
               } catch (exc) {

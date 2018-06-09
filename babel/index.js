@@ -29,6 +29,8 @@ const ID_MODULE = 'module';
 const ID_REQUIRE = 'require';
 const STR_MODULE_KEYS_CJS = 'module-keys/cjs';
 
+const moduleRoot = path.join(__dirname, '..');
+
 function isIdentifierNamed(node, name) {
   return node.type === 'Identifier' && node.name === name;
 }
@@ -101,10 +103,15 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
           isCommonJsModule = true;
           sawCjsPolyfill = false;
           sawEsPolyfill = false;
-          if (path.join(__dirname, '..', 'index.js') === state.file.opts.filename) {
-            // Don't polyfill the index file.  It bootstraps itself
-            sawCjsPolyfill = true;
-            state.stop();
+          const { filename } = state.file.opts;
+          if (moduleRoot === path.dirname(filename)) {
+            const basename = path.basename(filename);
+            if (basename === 'index.js') {
+              // Don't polyfill the index file.  It bootstraps itself
+              sawCjsPolyfill = true;
+            } else if (basename === 'index.mjs') {
+              sawEsPolyfill = true;
+            }
           }
         },
         exit(nodePath, state) {

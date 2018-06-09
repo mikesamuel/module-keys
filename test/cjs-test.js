@@ -90,7 +90,7 @@ describe('cjs', () => {
       expect(keys.publicKey).to.equal(module.exports.publicKey);
     });
     it('id', () => {
-      expect(module.exports.publicKey.moduleIdentifier).to.equal(__filename);
+      expect(module.exports.publicKey.moduleIdentifier).to.equal('./module-keys/test/cjs-test.js');
     });
   });
 });

@@ -14,7 +14,8 @@
     "index.js",
     "index.mjs",
     "babel/index.js",
-    "cjs/index.js"
+    "cjs/index.js",
+    "lib/relpath.js"
   ],
   "dependencies": {},
   "scripts": {

@@ -17,6 +17,9 @@
 
 'use strict';
 
+const { expect } = require('chai');
+const { describe, it } = require('mocha');
+const babel = require('babel-core');
 const path = require('path');
 const pluginTester = require('babel-plugin-tester');
 const plugin = require('../babel');
@@ -25,4 +28,28 @@ const plugin = require('../babel');
 pluginTester({
   plugin,
   fixtures: path.join(__dirname, 'data', 'babel'),
+});
+
+
+describe('polyfilling v bootstrap', () => {
+  // Test that the polyfill does not prevent the main library files
+  // from bootstrapping themselves.
+  // We might get bad interactions if the polyfill introduces a module
+  // dependency cycle or if it depends on exports that have yet to be computed.
+
+  function expectPluginNoop(srcFile) {
+    // eslint-disable-next-line no-sync
+    const { code: withPlugin } = babel.transformFileSync(
+      srcFile, { plugins: './babel' });
+    // eslint-disable-next-line no-sync
+    const { code: withoutPlugin } = babel.transformFileSync(srcFile);
+    expect(withPlugin).to.equal(withoutPlugin);
+  }
+
+  it('cjs', () => {
+    expectPluginNoop(path.join(__dirname, '../index.js'));
+  });
+  it('es6', () => {
+    expectPluginNoop(path.join(__dirname, '../index.mjs'));
+  });
 });
