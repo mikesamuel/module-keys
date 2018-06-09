@@ -21,7 +21,7 @@
 
 const { expect } = require('chai');
 const { describe, it } = require('mocha');
-require('../cjs').polyfill(module, require);
+require('../cjs').polyfill(module, require, './module-keys/test/cjs-test.js');
 const { isPublicKey, publicKeySymbol } = require('../index.js');
 
 describe('cjs', () => {
