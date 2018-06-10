@@ -76,9 +76,13 @@ describe('relpath', () => {
   [
     /* eslint-disable array-element-newline */
     [ '/', '/', '.' ],
+    [ '/foo/bar', '/foo/bar', '.' ],
     [ '/foo/bar', '/foo/bar/baz', './baz' ],
     [ '/foo/bar', '/foo/bar/baz/..', '.' ],
+    [ '/foo/bar/baz', '/foo/bar', '..' ],
     [ '/a/b', '/a/c/d/e/f', '../c/d/e/f' ],
+    [ '/aa/bb', '/aa/cc/dd/ee/ff', '../cc/dd/ee/ff' ],
+    [ '/a/b/c/d', '/a/e/f/g/./h', '../../../e/f/g/h' ],
     /* eslint-enable array-element-newline */
   ].forEach(([ base, abs, want ]) => {
     it(`relpath(${ JSON.stringify(base) }, ${ JSON.stringify(abs) })`, () => {
@@ -86,6 +90,52 @@ describe('relpath', () => {
       const localAbs = local(abs);
       const localWant = local(want);
       const got = relpath.relpath(localBase, localAbs);
+      expect(got).to.equal(localWant);
+    });
+  });
+});
+
+describe('basename', () => {
+  [
+    /* eslint-disable array-element-newline */
+    [ '', '' ],
+    [ '/', '' ],
+    [ '.', '.' ],
+    [ '..', '..' ],
+    [ 'foo', 'foo' ],
+    [ 'foo/', '' ],
+    [ 'foo.bar', 'foo.bar' ],
+    [ 'foo/bar', 'bar' ],
+    [ '/foo', 'foo' ],
+    /* eslint-enable array-element-newline */
+  ].forEach(([ inp, want ]) => {
+    it(`bassename(${ JSON.stringify(inp) })`, () => {
+      const localInp = local(inp);
+      const localWant = local(want);
+      const got = relpath.basename(localInp);
+      expect(got).to.equal(localWant);
+    });
+  });
+});
+
+describe('dirame', () => {
+  [
+    /* eslint-disable array-element-newline */
+    [ '', '' ],
+    [ '/', '' ],
+    [ '.', '' ],
+    [ '..', '' ],
+    [ 'foo', '' ],
+    [ 'foo/', 'foo' ],
+    [ 'foo.bar', '' ],
+    [ 'foo/bar', 'foo' ],
+    [ '/foo', '' ],
+    /* eslint-enable array-element-newline */
+  ].forEach(([ inp, want ]) => {
+    it(`dirname(${ JSON.stringify(inp) })`, () => {
+      const localInp = local(inp);
+      const localWant = local(want);
+      const got = relpath.dirname(localInp);
       expect(got).to.equal(localWant);
     });
   });
