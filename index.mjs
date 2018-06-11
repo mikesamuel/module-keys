@@ -167,7 +167,7 @@ function makeModuleKeys(moduleIdentifier) {
    *
    * @param {*} value the value that will be given to
    *    an approved unboxer.
-   * @param {function(function():boolean):boolean} mayOpen
+   * @param {!function(function():boolean):boolean} mayOpen
    *    receives the public key of the opener.
    *    Should return `true` to allow.
    *    This will be called in the context of the opener's
@@ -192,7 +192,7 @@ function makeModuleKeys(moduleIdentifier) {
    * Tries to open a box.
    *
    * @param {*} box the box to unbox.
-   * @param {function(function():boolean):boolean} ifFrom
+   * @param {?function(function():boolean):boolean} ifFrom
    *    if the box may be opened by this unboxer's owner,
    *    then ifFrom receives the publicKey of the box creator.
    *    It should return true to allow unboxing to proceed.
@@ -201,6 +201,9 @@ function makeModuleKeys(moduleIdentifier) {
    * @return {*} the value if unboxing is allowed or fallback otherwise.
    */
   function unbox(box, ifFrom, fallback) { // eslint-disable-line no-shadow
+    if (ifFrom == null) { // eslint-disable-line
+      ifFrom = () => true;
+    }
     if (typeof ifFrom !== 'function') {
       throw new Error(`Expected function not ${ ifFrom }`);
     }
@@ -223,7 +226,7 @@ function makeModuleKeys(moduleIdentifier) {
   /**
    * Like unbox but raises an exception if unboxing fails.
    * @param {*} box the box to unbox.
-   * @param {function(function():boolean):boolean} ifFrom
+   * @param {?function(function():boolean):boolean} ifFrom
    *    if the box may be opened by this unboxer's owner,
    *    then ifFrom receives the publicKey of the box creator.
    *    It should return true to allow unboxing to proceed.

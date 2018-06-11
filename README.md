@@ -7,6 +7,7 @@ different privileges to some modules than others.
 [![Dependencies Status](https://david-dm.org/mikesamuel/module-keys/status.svg)](https://david-dm.org/mikesamuel/module-keys)
 [![npm](https://img.shields.io/npm/v/module-keys.svg)](https://www.npmjs.com/package/module-keys)
 [![Coverage Status](https://coveralls.io/repos/github/mikesamuel/module-keys/badge.svg?branch=master)](https://coveralls.io/github/mikesamuel/module-keys?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/github/mikesamuel/module-keys/badge.svg?targetFile=package.json)](https://snyk.io/test/github/mikesamuel/module-keys?targetFile=package.json)
 
 *  [Why Module Keys?](#why-module-keys)
 *  [Installing](#installing)

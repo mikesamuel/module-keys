@@ -53,6 +53,39 @@ describe('trusted path', () => {
   });
 });
 
+describe('missing arguments', () => {
+  const alice = makeModuleKeys('alice');
+  const bob = makeModuleKeys('bob');
+  it('mayOpen', () => {
+    expect(() => alice.box('content')).to.throw();
+  });
+
+  const forBob = alice.box('content', (pub) => pub === bob.publicKey && pub());
+  describe('ifFrom', () => {
+    it('unbox', () => {
+      expect(bob.unbox(forBob)).to.equal('content');
+      expect(bob.unbox(forBob, null, 'fallback')).to.equal('content');
+      expect(bob.unbox(forBob, void 0, 'fallback')).to.equal('content');
+      expect(() => bob.unbox(forBob, false, 'fallback')).to.throw();
+      expect(() => bob.unbox(forBob, true, 'fallback')).to.throw();
+      expect(() => bob.unbox(forBob, {}, 'fallback')).to.throw();
+    });
+    it('unboxStrict', () => {
+      expect(bob.unboxStrict(forBob)).to.equal('content');
+      expect(() => alice.unboxStrict(forBob)).to.throw();
+      expect(bob.unboxStrict(forBob, null, 'fallback')).to.equal('content');
+      expect(bob.unboxStrict(forBob, void 0)).to.equal('content');
+      expect(() => bob.unboxStrict(forBob, false)).to.throw();
+      expect(() => bob.unboxStrict(forBob, true)).to.throw();
+      expect(() => bob.unboxStrict(forBob, {})).to.throw();
+    });
+  });
+  it('fallback', () => {
+    expect(alice.unbox('foo')).to.equal(void 0);
+    expect(alice.unbox('foo', () => true)).to.equal(void 0);
+  });
+});
+
 describe('privacy', () => {
   const alice = makeModuleKeys('alice');
   const box = alice.box('foo', () => true);
