@@ -112,8 +112,8 @@ moduleKeys.box(...);  // See API below
 ### `class Box`
 A box is a container for a value that may only be opened by an authorized opener.
 
-Boxes are opaque values, and the contained value can only be accessed by passing
-them to a `.unbox` which is described below.
+Boxes are opaque values, and the only way to access the contained value is to use
+an `.unbox` method as described below.
 
 ```js
 const { Box } = require('module-keys');       // CommonJS
