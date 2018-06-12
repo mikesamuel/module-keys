@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// !module-keys-babel-skip -- Do not polyfill this file
 'use strict';
 
 /**
@@ -80,6 +81,7 @@ let BoxPrivates; // eslint-disable-line no-unused-vars, init-declarations
  */
 function selfContained(collection) {
   const proto = getPrototypeOf(collection);
+  /* istanbul ignore if */
   if (!proto || getPrototypeOf(proto) !== ObjectPrototype) {
     // The loop below is insufficient.
     throw new Error();

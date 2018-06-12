@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// !module-keys-babel-skip -- Do not polyfill this file
 'use strict';
 
 /**
@@ -80,6 +81,7 @@ let BoxPrivates; // eslint-disable-line no-unused-vars, init-declarations
  */
 function selfContained(collection) {
   const proto = getPrototypeOf(collection);
+  /* istanbul ignore if */
   if (!proto || getPrototypeOf(proto) !== ObjectPrototype) {
     // The loop below is insufficient.
     throw new Error();
@@ -283,10 +285,12 @@ defineProperty(
 // Prevent private key gathering via replacement.
 for (const [ propertyName, descriptor ]
   of Object.entries(Object.getOwnPropertyDescriptors(module))) {
-  if (descriptor.configurable) {
-    delete module[propertyName];
-    descriptor.writable = propertyName === 'loaded';
-    descriptor.configurable = false;
-    defineProperty(module, propertyName, descriptor);
+  /* istanbul ignore if */
+  if (!descriptor.configurable) {
+    continue;
   }
+  delete module[propertyName];
+  descriptor.writable = propertyName === 'loaded';
+  descriptor.configurable = false;
+  defineProperty(module, propertyName, descriptor);
 }

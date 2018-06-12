@@ -34,6 +34,7 @@ const defaultRootDir = (() => {
   const root = path.join(__dirname, '..');
   // dir containing module-keys
   const rootParent = path.join(root, '..');
+  /* istanbul ignore next */
   return path.basename(rootParent) === 'node_modules' ?
     path.join(rootParent, '..') :
     root;
@@ -107,20 +108,18 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
         isCommonJsModule = false;
       },
       Program: {
-        enter(nodePath, state) {
+        enter(nodePath) {
           // until proven otherwise
           isCommonJsModule = true;
           sawCjsPolyfill = false;
           sawEsPolyfill = false;
-          const { filename } = state.file.opts;
-          if (path.join(__dirname, '..') === path.dirname(filename)) {
-            const basename = path.basename(filename);
-            if (basename === 'index.js') {
-              // Don't polyfill the index file.  It bootstraps itself
-              sawCjsPolyfill = true;
-            } else if (basename === 'index.mjs') {
-              sawEsPolyfill = true;
-            }
+
+          // Recognize a comment directive so that applying this plugin to all
+          // dependencies does not prevent ../index.js from bootstrapping itself.
+          if (nodePath.parent.comments.some(
+            ({ value }) => value.indexOf('!module-keys-babel-skip') >= 0)) {
+            sawCjsPolyfill = true;
+            sawEsPolyfill = true;
           }
         },
         exit(nodePath, state) {
