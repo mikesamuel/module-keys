@@ -152,6 +152,10 @@ function makeModuleKeys(moduleIdentifier) {
   }
   publicKeys.add(publicKey);
 
+  // Allow a private key to be used in lieu of the pair.
+  defineProperty(
+    privateKey, 'publicKey', { value: publicKey, enumerable: true });
+
   // We attach a module identifier to the public key to enable
   // whitelisting based on strings in a configuration without having
   // to load modules before storing their public key in a set.

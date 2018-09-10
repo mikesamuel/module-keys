@@ -197,6 +197,10 @@ Any calls to `.publicKey()` during the call to `f()` will return true.
 
 Returns - the result of calling `f()`.
 
+Each private key refers to its corresponding public key via its
+`publicKey` property, so to pass a key pair, it is sufficient to pass
+the private key.  Public keys do not refer to private keys.
+
 **Warning**: Do not export your private keys as that may allow other
 code to impersonate you.  If you need to provide your private key to a
 module you trust, put it in a box that is only openable by that

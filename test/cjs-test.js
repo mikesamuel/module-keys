@@ -93,4 +93,12 @@ describe('cjs', () => {
       expect(module.exports.publicKey.moduleIdentifier).to.equal('./module-keys/test/cjs-test.js');
     });
   });
+  it('private stands alone', () => {
+    const { keys: { privateKey, publicKey } } = require;
+    expect(publicKey).to.equal(privateKey.publicKey);
+    expect(() => (privateKey.publicKey = null)).to.throw();
+    expect(publicKey).to.equal(privateKey.publicKey);
+    expect(() => delete privateKey.publicKey).to.throw();
+    expect(publicKey).to.equal(privateKey.publicKey);
+  });
 });
