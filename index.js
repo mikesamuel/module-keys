@@ -35,8 +35,8 @@
 
 // Capture some globals so we can rely on them later
 const {
-  create, defineProperties, defineProperty, freeze, getOwnPropertyNames, getPrototypeOf,
-  prototype: ObjectPrototype,
+  create, defineProperties, defineProperty, freeze, getOwnPropertyNames,
+  getPrototypeOf, prototype: ObjectPrototype,
 } = Object;
 const { apply: fApply, call: fCall } = Function.prototype;
 
@@ -101,6 +101,7 @@ const boxes = selfContained(new WeakMap());
 
 /**
  * A set of all public keys.
+ *
  * @type {!WeakSet<!PublicKey>}
  */
 const publicKeys = selfContained(new WeakSet());
@@ -110,6 +111,7 @@ const publicKeys = selfContained(new WeakSet());
  *
  * Public keys are represented as functions that return true
  * iff called during the execution of their matching private key.
+ *
  * @type {!function(*):boolean}
  */
 const isPublicKey = publicKeys.has.bind(publicKeys);
@@ -184,7 +186,7 @@ function makeModuleKeys(moduleIdentifier) {
    */
   function box(value, mayOpen) {
     if (typeof mayOpen !== 'function') {
-      throw new Error(`Expected function not ${ mayOpen }`);
+      throw new TypeError(`Expected function not ${ mayOpen }`);
     }
     // Allocate an opaque token
     const newBox = new Box();
@@ -211,7 +213,7 @@ function makeModuleKeys(moduleIdentifier) {
       ifFrom = () => true;
     }
     if (typeof ifFrom !== 'function') {
-      throw new Error(`Expected function not ${ ifFrom }`);
+      throw new TypeError(`Expected function not ${ ifFrom }`);
     }
     const boxData = boxes.get(box);
     if (!boxData) {
@@ -264,7 +266,7 @@ function makeModuleKeys(moduleIdentifier) {
 }
 
 // CommonJS specific
-const { publicKey: myPublicKey } = makeModuleKeys();
+const { publicKey: myPublicKey } = makeModuleKeys('module-keys');
 
 module.exports = freeze(defineProperties(
   create(null),
@@ -275,8 +277,8 @@ module.exports = freeze(defineProperties(
     publicKeySymbol: { value: publicKeySymbol, enumerable: true },
 
     // The public key for this module.  Exported for consistency.
-    publicKey: myPublicKey,
-    [publicKeySymbol]: myPublicKey,
+    publicKey: { value: myPublicKey },
+    [publicKeySymbol]: { value: myPublicKey },
   }));
 
 // Try to establish a trusted path.

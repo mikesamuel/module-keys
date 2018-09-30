@@ -198,3 +198,12 @@ describe('mitm', () => {
     });
   }
 });
+
+describe('has keys', () => {
+  it('publicKey', () => {
+    expect(isPublicKey(index.publicKey));
+  });
+  it('publicKey via symbol', () => {
+    expect(isPublicKey(index[index.publicKeySymbol]));
+  });
+});
