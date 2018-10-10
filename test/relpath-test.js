@@ -57,6 +57,7 @@ describe('dedot', () => {
     [ '/foo/bar/../../../baz/../', '/' ],
     [ '/foo/bar/../../../baz/../..', '/' ],
     [ '/foo/bar/../../../baz/../../', '/' ],
+    [ '/home/user/foo/node_modules/module/foo/../bar', '/home/user/foo/node_modules/module/bar' ],
     [ 'a/.../b', 'a/.../b' ],
     [ 'a//b', 'a/b' ],
     [ 'a/b//../c', 'a/c' ],

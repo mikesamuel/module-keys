@@ -42,6 +42,9 @@ const { defineProperties, hasOwnProperty } = Object;
  * @param {!function(string):*} require module's require function.
  */
 function polyfill(module, require, moduleIdentifier) {
+  if (apply(hasOwnProperty, require, [ 'keys' ])) {
+    return;
+  }
   const keysObj = makeModuleKeys(moduleIdentifier);
   require.keys = keysObj;
   const { publicKey } = keysObj;
