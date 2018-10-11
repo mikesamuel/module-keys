@@ -70,7 +70,7 @@ describe('babel plugin options', () => {
         ],
       });
     expect(code).to.equal(
-      'require("module-keys/cjs").polyfill(module, require, "../bar/baz.js");\n\n' +
+      'require("module-keys/cjs").polyfill(module, require, module.id);\n\n' +
       'function f() {}');
   });
   it('es6 explicit root', () => {

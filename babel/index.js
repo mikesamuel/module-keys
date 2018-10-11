@@ -24,6 +24,7 @@
 
 const path = require('path');
 
+const ID_ID = 'id';
 const ID_POLYFILL = 'polyfill';
 const ID_MODULE = 'module';
 const ID_REQUIRE = 'require';
@@ -91,7 +92,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                 (arg) => isString(arg, STR_MODULE_KEYS_CJS)),
               (arg) => isIdentifierNamed(arg, ID_MODULE),
               (arg) => isIdentifierNamed(arg, ID_REQUIRE),
-              (arg) => arg.type === 'StringLiteral')) {
+              () => true)) {
           sawCjsPolyfill = true;
         }
       },
@@ -141,7 +142,10 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                       t.identifier(ID_REQUIRE),
                       [ t.stringLiteral(STR_MODULE_KEYS_CJS) ]),
                     t.identifier(ID_POLYFILL)),
-                  [ t.identifier(ID_MODULE), t.identifier(ID_REQUIRE), t.stringLiteral(importSpec) ])));
+                  [
+                    t.identifier(ID_MODULE), t.identifier(ID_REQUIRE),
+                    t.memberExpression(t.identifier(ID_MODULE), t.identifier(ID_ID)),
+                  ])));
           } else {
             // Compute the absolute path to the ESM index file.
             const moduleKeysPath = path.join(__dirname, '..', 'index.mjs');

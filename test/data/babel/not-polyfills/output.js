@@ -1,17 +1,17 @@
 'use strict';
 
-require('module-keys/cjs').polyfill(module, require, 'test/data/babel/not-polyfills/code.js');
+require('module-keys/cjs').polyfill(module, require, module.id);
 
 ;
 
 // None of these are polyfills
-Require('module-keys/cjs').polyfill(module, require, '/a');
-require('nodule-keys/cjs').polyfill(module, require, '/a');
-require('module-keys/cjs').polyfool(module, require, '/a');
-require.polyfill(module, require, '/a');
-require('module-keys/cjs').polyfill(module, '/a');
+Require('module-keys/cjs').polyfill(module, require, module.id);
+require('nodule-keys/cjs').polyfill(module, require, module.id);
+require('module-keys/cjs').polyfool(module, require, module.id);
+require.polyfill(module, require, module.id);
+require('module-keys/cjs').polyfill(module, module.id);
 require('module-keys/cjs').polyfill(module, require);
-require('module-keys/cjs').polyfill(mule, require, '/a');
-require('module-keys/cjs').polyfill(require, module, '/a');
-require('module-keys/cjs').polyfill(module, require, '/a', 'Why am I here?');
+require('module-keys/cjs').polyfill(mule, require, module.id);
+require('module-keys/cjs').polyfill(require, module, module.id);
+require('module-keys/cjs').polyfill(module, require, module.id, 'Why am I here?');
 // End of bad polyfills

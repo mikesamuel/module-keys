@@ -1,6 +1,6 @@
 'use strict';
 'be nice';
 
-require('module-keys/cjs').polyfill(module, require, 'test/data/babel/directive-prologue/code.js');
+require('module-keys/cjs').polyfill(module, require, module.id);
 
 do {} while (false);
