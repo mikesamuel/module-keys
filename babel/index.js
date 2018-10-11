@@ -24,7 +24,6 @@
 
 const path = require('path');
 
-const ID_ID = 'id';
 const ID_POLYFILL = 'polyfill';
 const ID_MODULE = 'module';
 const ID_REQUIRE = 'require';
@@ -55,10 +54,15 @@ function isCall(node, fnPredicate, ...argPredicates) {
   }
   const { callee, 'arguments': args } = node;
   const nArgs = args.length;
-  if (nArgs === argPredicates.length &&
-      fnPredicate(callee)) {
+  const nPreds = argPredicates.length;
+  if (nArgs <= nPreds && fnPredicate(callee)) {
     for (let i = 0; i < nArgs; ++i) {
       if (!argPredicates[i](args[i])) {
+        return false;
+      }
+    }
+    for (let i = nArgs; i < nPreds; ++i) {
+      if (!argPredicates[i]({ type: 'missingOptionalArgument' })) {
         return false;
       }
     }
@@ -92,6 +96,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                 (arg) => isString(arg, STR_MODULE_KEYS_CJS)),
               (arg) => isIdentifierNamed(arg, ID_MODULE),
               (arg) => isIdentifierNamed(arg, ID_REQUIRE),
+              // Earlier versions allowed an extra module identifier param.
               () => true)) {
           sawCjsPolyfill = true;
         }
@@ -142,10 +147,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
                       t.identifier(ID_REQUIRE),
                       [ t.stringLiteral(STR_MODULE_KEYS_CJS) ]),
                     t.identifier(ID_POLYFILL)),
-                  [
-                    t.identifier(ID_MODULE), t.identifier(ID_REQUIRE),
-                    t.memberExpression(t.identifier(ID_MODULE), t.identifier(ID_ID)),
-                  ])));
+                  [ t.identifier(ID_MODULE), t.identifier(ID_REQUIRE) ])));
           } else {
             // Compute the absolute path to the ESM index file.
             const moduleKeysPath = path.join(__dirname, '..', 'index.mjs');

@@ -29,9 +29,14 @@
  * </ol>
  */
 
-const { makeModuleKeys, publicKeySymbol } = require('../index.js');
-const { apply } = Reflect;
 const { defineProperties, hasOwnProperty } = Object;
+const { replace } = String.prototype;
+const { apply } = Reflect;
+const { sep } = require('path');
+const { makeModuleKeys, publicKeySymbol } = require('../index.js');
+
+const sepGlobalPattern = sep === '\\' ? /\\/g : new RegExp(`[${ sep }]`, 'g');
+sepGlobalPattern.exec = sepGlobalPattern.exec;
 
 /**
  * Makes module keys available to module code as {@code require.keys}
@@ -41,9 +46,16 @@ const { defineProperties, hasOwnProperty } = Object;
  * @param {!Module} module the CommonJS module to polyfill.
  * @param {!function(string):*} require module's require function.
  */
-function polyfill(module, require, moduleIdentifier) {
+function polyfill(module, require) {
   if (apply(hasOwnProperty, require, [ 'keys' ])) {
     return;
+  }
+  let moduleIdentifier = `${ module.filename }`;
+  if (sep !== '/') {
+    moduleIdentifier = apply(replace, moduleIdentifier, [ sepGlobalPattern, '/' ]);
+    if (moduleIdentifier[0] !== '/') {
+      moduleIdentifier = `/${ moduleIdentifier }`;
+    }
   }
   const keysObj = makeModuleKeys(moduleIdentifier);
   require.keys = keysObj;

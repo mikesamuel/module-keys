@@ -90,7 +90,8 @@ describe('cjs', () => {
       expect(keys.publicKey).to.equal(module.exports.publicKey);
     });
     it('id', () => {
-      expect(module.exports.publicKey.moduleIdentifier).to.equal('./module-keys/test/cjs-test.js');
+      expect(require.resolve(module.exports.publicKey.moduleIdentifier))
+        .to.equal(module.filename);
     });
   });
   it('private stands alone', () => {
