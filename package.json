@@ -79,6 +79,7 @@
       }
     },
     "rules": {
+      "array-element-newline": "off",
       "no-warning-comments": [
         "error",
         {
