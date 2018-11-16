@@ -138,7 +138,7 @@ module.exports = function moduleKeysBabelPlugin({ types: t }) {
 
           const polyfills = [];
           if (isCommonJsModule) {
-            // require('module-keys/cjs').polyfill(module, require, 'path');
+            // require('module-keys/cjs').polyfill(module, require);
             polyfills.push(
               t.expressionStatement(
                 t.callExpression(
