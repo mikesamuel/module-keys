@@ -33,7 +33,7 @@ const { defineProperties, hasOwnProperty } = Object;
 const { replace } = String.prototype;
 const { apply } = Reflect;
 const { sep } = require('path');
-const { makeModuleKeys, publicKeySymbol } = require('../index.js');
+const { makeModuleKeys, publicKeySymbol, keysSymbol } = require('../index.js');
 
 const sepGlobalPattern = sep === '\\' ? /\\/g : new RegExp(`[${ sep }]`, 'g');
 sepGlobalPattern.exec = sepGlobalPattern.exec;
@@ -47,8 +47,13 @@ sepGlobalPattern.exec = sepGlobalPattern.exec;
  * @param {!function(string):*} require module's require function.
  */
 function polyfill(module, require) {
-  if (apply(hasOwnProperty, require, [ 'keys' ])) {
-    return;
+  const hasKeysProp = apply(hasOwnProperty, require, [ 'keys' ]);
+  if (hasKeysProp) {
+    const oldKeys = require.keys;
+    if (oldKeys && typeof oldKeys.publicKey === 'function' &&
+        typeof oldKeys.isPublicKey === 'function') {
+      return;
+    }
   }
   let moduleIdentifier = `${ module.filename }`;
   if (sep !== '/') {
@@ -57,8 +62,13 @@ function polyfill(module, require) {
       moduleIdentifier = `/${ moduleIdentifier }`;
     }
   }
+
   const keysObj = makeModuleKeys(moduleIdentifier);
-  require.keys = keysObj;
+  if (!hasKeysProp) {
+    require.keys = keysObj;
+  }
+  require[keysSymbol] = keysObj;
+
   const { publicKey } = keysObj;
   // Export the public key.
   module.exports.publicKey = publicKey;
