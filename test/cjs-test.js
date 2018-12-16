@@ -77,17 +77,17 @@ describe('cjs', () => {
     });
   });
   describe('require.moduleKeys', () => {
-    const { keys } = require;
+    const { moduleKeys } = require;
     it('publicKey', () => {
-      expect(isPublicKey(keys.publicKey)).to.equal(true);
+      expect(isPublicKey(moduleKeys.publicKey)).to.equal(true);
     });
-    it('keys', () => {
-      expect(keys.publicKey()).to.equal(false);
-      expect(keys.privateKey(() => keys.publicKey())).to.equal(true);
-      expect(keys.publicKey()).to.equal(false);
+    it('moduleKeys', () => {
+      expect(moduleKeys.publicKey()).to.equal(false);
+      expect(moduleKeys.privateKey(() => moduleKeys.publicKey())).to.equal(true);
+      expect(moduleKeys.publicKey()).to.equal(false);
     });
     it('exports', () => {
-      expect(keys.publicKey).to.equal(module.exports.publicKey);
+      expect(moduleKeys.publicKey).to.equal(module.exports.publicKey);
     });
     it('id', () => {
       expect(require.resolve(module.exports.publicKey.moduleIdentifier))
@@ -95,7 +95,7 @@ describe('cjs', () => {
     });
   });
   it('private stands alone', () => {
-    const { keys: { privateKey, publicKey } } = require;
+    const { moduleKeys: { privateKey, publicKey } } = require;
     expect(publicKey).to.equal(privateKey.publicKey);
     expect(() => (privateKey.publicKey = null)).to.throw();
     expect(publicKey).to.equal(privateKey.publicKey);

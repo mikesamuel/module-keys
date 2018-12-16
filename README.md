@@ -91,11 +91,11 @@ require("@babel/core").transform("code", {
 
 ### CommonJS Modules
 Once you've run the Babel plugin over your modules, each module will have
-its own keys available via `require.keys`, and will export its `publicKey`
+its own keys available via `require.moduleKeys`, and will export its `publicKey`
 if doing so would not conflict with an explicit export.
 
 ```js
-require.keys.box(...);  // boxes a value.  See API below
+require.moduleKeys.box(...);  // boxes a value.  See API below
 ```
 
 ### ES6 Modules
@@ -133,7 +133,7 @@ Returns an instance of `class Box`.
 ```js
 // CommonJS
 const { publicKey: fooKey } = require('./foo');
-const box = require.keys.box(value, (k) => k === fooKey && k());
+const box = require.moduleKeys.box(value, (k) => k === fooKey && k());
 // box may only be opened via ./foo's unboxer.
 ```
 
@@ -162,7 +162,7 @@ true when passed the boxer's public key.  Otherwise returns *fallback*.
 // CommonJS
 const { publicKey: barKey } = require('./bar');
 function f(box) {
-  console.log(`I got ${ require.keys.unbox(box, () => true, 'a box I cannot open') }`)
+  console.log(`I got ${ require.moduleKeys.unbox(box, () => true, 'a box I cannot open') }`)
 }
 ```
 

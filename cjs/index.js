@@ -23,7 +23,7 @@
  * <ol>
  *   <li>allocates a module keys instance for the module</li>
  *   <li>attaches the public key to {@code module.exports}</li>
- *   <li>makes the module keys available via {@code require.keys}</li>
+ *   <li>makes the module keys available via {@code require.moduleKeys}</li>
  *   <li>hooks into the module so that common patterns of replacing
  *      {@code module.exports} will still export {@code publicKey}.</li>
  * </ol>
@@ -33,13 +33,13 @@ const { defineProperties, hasOwnProperty } = Object;
 const { replace } = String.prototype;
 const { apply } = Reflect;
 const { sep } = require('path');
-const { makeModuleKeys, publicKeySymbol, keysSymbol } = require('../index.js');
+const { makeModuleKeys, publicKeySymbol } = require('../index.js');
 
 const sepGlobalPattern = sep === '\\' ? /\\/g : new RegExp(`[${ sep }]`, 'g');
 sepGlobalPattern.exec = sepGlobalPattern.exec;
 
 /**
- * Makes module keys available to module code as {@code require.keys}
+ * Makes module keys available to module code as {@code require.moduleKeys}
  * and makes a best effort to export the modules public key via
  * an exported property named "publicKey" and via the public key symbol.
  *
@@ -47,13 +47,8 @@ sepGlobalPattern.exec = sepGlobalPattern.exec;
  * @param {!function(string):*} require module's require function.
  */
 function polyfill(module, require) {
-  const hasKeysProp = apply(hasOwnProperty, require, [ 'keys' ]);
-  if (hasKeysProp) {
-    const oldKeys = require.keys;
-    if (oldKeys && typeof oldKeys.publicKey === 'function' &&
-        typeof oldKeys.isPublicKey === 'function') {
-      return;
-    }
+  if (apply(hasOwnProperty, require, [ 'moduleKeys' ])) {
+    return;
   }
   let moduleIdentifier = `${ module.filename }`;
   if (sep !== '/') {
@@ -64,10 +59,7 @@ function polyfill(module, require) {
   }
 
   const keysObj = makeModuleKeys(moduleIdentifier);
-  if (!hasKeysProp) {
-    require.keys = keysObj;
-  }
-  require[keysSymbol] = keysObj;
+  require.moduleKeys = keysObj;
 
   const { publicKey } = keysObj;
   // Export the public key.

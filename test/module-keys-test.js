@@ -130,7 +130,7 @@ describe('mitm', () => {
     };
     polyfill(aliceModule, aliceRequire);
 
-    const alice = aliceRequire.keys;
+    const alice = aliceRequire.moduleKeys;
     const bob = makeModuleKeys('bob');
     const box = alice.box(
       {}, (key) => key === bob.publicKey && isPublicKey(key) && key());

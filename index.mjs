@@ -121,11 +121,6 @@ const isPublicKey = publicKeys.has.bind(publicKeys);
  */
 const publicKeySymbol = Symbol('publicKey');
 
-/**
- * Symbol used to attach keys to CommonJS require.
- */
-const keysSymbol = Symbol('keys');
-
 /** An opaque token used to represent a boxed value in transit. */
 class Box {
   toString() { // eslint-disable-line class-methods-use-this
@@ -278,7 +273,6 @@ export {
   makeModuleKeys,
   isPublicKey,
   publicKeySymbol,
-  keysSymbol,
 
   // The public key for this module.  Exported for consistency.
   myPublicKey as publicKey,
