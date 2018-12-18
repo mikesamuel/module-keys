@@ -69,63 +69,68 @@ function polyfill(module, require) {
   // sneak it in there too.
   let { exports, loaded } = module;
   delete module.exports;
-  delete module.loaded;
-  defineProperties(
-    module, {
-      exports: {
-        enumerable: true,
-        configurable: true,
-        get() {
-          return exports;
-        },
-        set(newExports) {
-          exports = newExports;
-          if (newExports &&
-              (typeof newExports === 'object' ||
-               typeof newExports === 'function')) {
-            if (!apply(hasOwnProperty, exports, [ 'publicKey' ])) {
-              try {
-                module.exports.publicKey = publicKey;
-              } catch (exc) {
-                // Oh well.  We tried our best.
-              }
-            }
-            if (!apply(hasOwnProperty, exports, [ publicKeySymbol ])) {
-              try {
-                module.exports[publicKeySymbol] = publicKey;
-              } catch (exc) {
-                // Oh well.  We tried our best.
-              }
+  const properties = {
+    exports: {
+      enumerable: true,
+      configurable: true,
+      get() {
+        return exports;
+      },
+      set(newExports) {
+        exports = newExports;
+        if (newExports &&
+            (typeof newExports === 'object' ||
+             typeof newExports === 'function')) {
+          if (!apply(hasOwnProperty, exports, [ 'publicKey' ])) {
+            try {
+              module.exports.publicKey = publicKey;
+            } catch (exc) {
+              // Oh well.  We tried our best.
             }
           }
-        },
-      },
-      loaded: {
-        enumerable: true,
-        configurable: true,
-        get() {
-          return loaded;
-        },
-        set(newLoaded) {
-          loaded = newLoaded;
-          if (loaded === true) {
-            // Stop virtualizing
+          if (!apply(hasOwnProperty, exports, [ publicKeySymbol ])) {
             try {
-              delete module.exports;
-              module.exports = exports;
+              module.exports[publicKeySymbol] = publicKey;
             } catch (exc) {
-              // Best effort.
-            }
-            try {
-              delete module.loaded;
-              module.loaded = loaded;
-            } catch (exc) {
-              // Best effort.
+              // Oh well.  We tried our best.
             }
           }
-        },
+        }
       },
-    });
+    },
+  };
+  try {
+    delete module.loaded;
+
+    properties.loaded = {
+      enumerable: true,
+      configurable: true,
+      get() {
+        return loaded;
+      },
+      set(newLoaded) {
+        loaded = newLoaded;
+        if (loaded === true) {
+          // Stop virtualizing
+          try {
+            delete module.exports;
+            module.exports = exports;
+          } catch (exc) {
+            // Best effort.
+          }
+          try {
+            delete module.loaded;
+            module.loaded = loaded;
+          } catch (exc) {
+            // Best effort.
+          }
+        }
+      },
+    };
+  } catch (exc) {
+    // Webpack locks this down.  Good job, webpack!
+  }
+  defineProperties(module, properties);
 }
 
 module.exports.polyfill = polyfill;
